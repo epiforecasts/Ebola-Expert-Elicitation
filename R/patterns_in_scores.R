@@ -1,7 +1,6 @@
 library(data.table)
 library(lubridate)
 library(viridis)
-library(hrbrthemes)
 
 
 
@@ -55,6 +54,3 @@ results_covar[type != 'model_nfd' & delayband == '[0,5)' & p_cm == '>=2' & type=
 
 results_covar[type != 'model_nfd' & p_cm=='>=2' & month=='December_2019' & expert == 1 & type=='expert']
 
-
-
-?rank

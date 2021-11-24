@@ -1,5 +1,8 @@
 library(data.table)
 library(lubridate)
+library(ggplot2)
+library(DescTools)
+library(viridis)
 
 results_data = fread('outputs/indevidual_results_with_scores.csv')
 

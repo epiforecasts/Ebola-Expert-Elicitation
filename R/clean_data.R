@@ -1,5 +1,13 @@
 library(data.table)
 library(lubridate)
+library(ggplot2)
+library(DescTools)
+
+log_score = function(risk_values,wherecaseswere){
+  log_probs = wherecaseswere * log(abs(risk_values-1e-10)) + ((1 - wherecaseswere ) * log(1 - (abs(risk_values-1e-10))))
+  mean_log_probs = mean(log_probs)
+  mean_log_probs
+}
 
 
 
