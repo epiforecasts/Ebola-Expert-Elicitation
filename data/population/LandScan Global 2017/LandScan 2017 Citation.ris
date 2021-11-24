@@ -1,0 +1,18 @@
+TY  - DATA
+AU  - Rose, Amy N.
+AU  - McKee, Jacob J.
+AU  - Urban, Marie L.
+AU  - Bright, Eddie A.
+PY  - 2018
+TI  - LandScan 2017
+CY  - Oak Ridge, TN
+PB  - Oak Ridge National Laboratory
+SE  - July 1, 2018
+T3  - LandScan
+ET  - 2017
+RI  - global
+C1  - CY 2017
+C3  - digital raster data
+AB  - Using an innovative approach with Geographic Information System and Remote Sensing, ORNL's LandScan™ is the community standard for global population distribution. At approximately 1 km resolution (30" X 30"), LandScan is the finest resolution global population distribution data available and represents an ambient population (average over 24 hours). The LandScan algorithm, an R&D 100 Award Winner, uses spatial data and imagery analysis technologies and a multi-variable dasymetric modeling approach to disaggregate census counts within an administrative boundary. Since no single population distribution model can account for the differences in spatial data availability, quality, scale, and accuracy as well as the differences in cultural settlement practices, LandScan population distribution models are tailored to match the data conditions and geographical nature of each individual country and region.
+RN  - When using the LandScan data in publications, please insert this statement as appropriate:  "This product was made utilizing the LandScan 2016™ High Resolution global Population Data Set copyrighted by UT-Battelle, LLC, operator of Oak Ridge National Laboratory under Contract No. DE-AC05-00OR22725 with the United States Department of Energy.  The United States Government has certain rights in this Data Set.  Neither UT-BATTELLE, LLC NOR THE UNITED STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF THE DATA SET."
+UR  - https://landscan.ornl.gov/
