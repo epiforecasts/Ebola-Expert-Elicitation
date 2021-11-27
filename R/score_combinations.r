@@ -91,14 +91,35 @@ ggplot() +
   theme_minimal()
 
 
-all_results[,rankp := frankv(risk_value, order=-1, ties.method = 'min'), by=list(type, expert, p_cm, month)]
+all_results[,rankp := frankv(risk_value, order=-1, ties.method = 'first'), by=list(type, expert, p_cm, month)]
 
+November_HZ = all_results[month=='November_2019'& p_cm == '>=2' & expert == 'ensemble_just_experts']$HZ[order(all_results[month=='November_2019' & p_cm == '>=2' & expert == 'ensemble_just_experts']$rankp, decreasing = TRUE)]
 
-#all_results[, HZ := factor(levels=unique(all_results[p_cm == '>=2' & expert == 'ensemble_just_experts']$HZ[order(all_results[p_cm == '>=2' & expert == 'ensemble_just_experts']$rankp, decreasing = TRUE)], x=all_results$HZ)]
+levs = c( unique(all_results[!(HZ%in%November_HZ)]$HZ), November_HZ)
+
+all_results[, HZ := factor(
+  levels=levs, 
+  x=all_results$HZ)]
+
 ggplot(all_results[!(type %in% c('model', 'expert'))][order(reported_cases)]) + 
   geom_tile(aes(y=HZ, x=expert, fill=rankp))+
   geom_point(aes(y=HZ, x=expert, alpha=reported_cases)) +
   scale_fill_viridis(direction=-1) + 
+  scale_alpha_continuous(breaks=c(0,1), labels=c(0,1))+
+  scale_x_discrete(labels=c('experts', 'exp + mod', 'model'), name="Forecast type")+
+  facet_grid(p_cm~month) + 
+  theme_minimal()
+
+colors = c('transparent', 'black')
+
+ggplot(all_results[!(type %in% c('model', 'expert'))]) + 
+  geom_tile(aes(y=round(rankp), x=expert, fill=HZ))+
+  scale_fill_discrete(type = 'pastel')+
+  geom_tile(aes(y=round(rankp), x=expert, size=reported_cases), color='black', fill='transparent')+
+  scale_size(breaks=c(0,1), range=c(0,2))+
+  scale_color_continuous(colors)+
+  geom_text(aes(y=round(rankp), x=expert, label=HZ))+
+  #geom_point(aes(y=round(rankp), x=expert, alpha=reported_cases)) +
   scale_alpha_continuous(breaks=c(0,1), labels=c(0,1))+
   scale_x_discrete(labels=c('experts', 'exp + mod', 'model'), name="Forecast type")+
   facet_grid(p_cm~month) + 
@@ -114,5 +135,40 @@ ggplot(all_results[!(type %in% c('model', 'expert'))][order(reported_cases)]) +
   facet_grid(p_cm~expert) + 
   theme_minimal()
 
+df = all_results[!(type %in% c('model', 'expert'))]
+
+all_results[expert == 'ensemble_just_experts','e':=1]
+all_results[expert == 'ensemble_with_model','e' := 2]
+all_results[expert == 'model','e' := 3]
+
+
+ggplot(all_results[!(type %in% c('model', 'expert'))], aes(x=e, y=rankp, color = HZ)) +
+  geom_point(aes(alpha=reported_cases),size = 3) +
+  geom_bump(aes(alpha=reported_cases), size = 1, smooth = 8)  +
+  scale_alpha_continuous(range = c(0.3,1), breaks=c(0,1), labels=c(0,1), limits=c(0.,1.0))+
+  #geom_text(data = df_short %>% filter(e == min(e)),
+  #          aes(x = e - .1, label = HZ), size = 5, hjust = 1) +
+  #geom_text(data = df_short %>% filter(e == max(e)),
+  #          aes(x = e + .1, label = HZ), size = 5, hjust = 0) +
+  theme_minimal_grid(font_size = 14, line_size = 0) +
+  theme(panel.spacing = unit(2, "lines"),
+        panel.grid.major = element_blank(), 
+        axis.text.x = element_text(angle=90)) +
+  labs(y = "RANK",
+       x = NULL) +
+  scale_y_reverse() + 
+  facet_grid(month ~ p_cm, scales = 'free_y', space='free', shrink = FALSE)+
+  scale_x_continuous(breaks=c(1,2,3), labels = c('experts', 'experts + model', 'model'))  +
+  coord_cartesian(clip = "off")
+
+df_short = df[,c('expert', 'rankp', 'HZ', 'reported_cases')]
+df_short[, expert := factor(expert, levels=c('ensemble_just_experts', 'ensemble_with_model', 'model'))]
+df_short[, e := c(rep(1,10),rep(2,10),rep(3,10)) ]
+df_short %>% 
+  ggplot(aes( e,rankp, color = HZ)) +
+  geom_bump()
+
+library(ggbump)
+library(tidyverse)
 
 all_results[month == 'November_2019' & p_cm == '>=2' & expert == 'ensemble_just_experts']

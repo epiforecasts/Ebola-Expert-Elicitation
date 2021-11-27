@@ -23,8 +23,11 @@ fix_nan1 <- function(x) {
 extract_totcase_data <- function(subarea = FALSE)
 
   {
+  
+  #DRC_all = st_read("data/shapes/ZS_MSF/COD_htbnd_lvl1_ZS_a_msf181114.shp", stringsAsFactors = FALSE) 
 
-  DRC2 = st_read("data/shapes/ZS_MSF/COD_htbnd_lvl1_ZS_a_msf181114.shp", stringsAsFactors = FALSE)    # shapefiles
+  DRC2 = st_read("data/shapes/Fixed_2/DRC_FIXED.shp", stringsAsFactors = FALSE)    # shapefiles
+
 
   #DRC2$ADM2_NAME <- str_to_title(DRC2$ADM2_NAME)
   POPDATA = read.csv('data/population/population_perHZ.csv', stringsAsFactors = FALSE)               # population data
