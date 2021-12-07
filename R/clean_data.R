@@ -129,8 +129,19 @@ for (month in months){
     ebola_risks_long[, month := month]
     ebola_risks_long[, type := 'model']
     
+    ebola_risks_adj_long[, expert := e]
+    ebola_risks_adj_long[, expert_date := expert_date]
+    ebola_risks_adj_long[, horizon_start_date := e_data$horizon_start_date[1]]
+    ebola_risks_adj_long[, horizon_end_date := e_data$horizon_end_date[1]]
+    ebola_risks_adj_long[, delay := e_data$delay[1]]
+    ebola_risks_adj_long[, total_horizon := e_data$total_horizon[1]]
+    ebola_risks_adj_long[, month := month]
+    ebola_risks_adj_long[, type := 'model_adj']
+    
     # add to overall model data container 
     model_data = rbind(model_data, ebola_risks_long[HZ %in% e_data[expert == e]$HZ])
+    model_data = rbind(model_data, ebola_risks_adj_long[HZ %in% e_data[expert == e]$HZ])
+    
 
     
   }
@@ -138,15 +149,22 @@ for (month in months){
   
   # calculate risks of for the forecast at nominal forecast date 
   ebola_risks = fread(paste0("forecasts/ebola_risks_", month,"_" , as.character(nominal_forecast_date), ".csv"))
+  ebola_risks_adj = fread(paste0("forecasts/ebola_risks_adj_", month,"_" , as.character(expert_date), ".csv"))
+  
   
   ebola_risks = ebola_risks[, c('ADM2_NAME', 'risk_TH_2', 'risk_TH_6', 'risk_TH_10', 'risk_TH_20')]
   colnames(ebola_risks) = c('HZ', ">=2",  ">=6", ">=10", ">=20")
+  
+  ebola_risks_adj = ebola_risks_adj[, c('ADM2_NAME', 'risk_TH_2', 'risk_TH_6', 'risk_TH_10', 'risk_TH_20')]
+  colnames(ebola_risks_adj) = c('HZ', ">=2",  ">=6", ">=10", ">=20")
 
   ebola_risks[, HZ := str_to_upper(HZ)]
+  ebola_risks_adj[, HZ := str_to_upper(HZ)]
 
   # convert outcomes to long format for concatination
   ebola_risks_long = melt(ebola_risks, id.vars = c('HZ'), measure.vars = c(">=2",  ">=6", ">=10", ">=20"), variable.name = 'p_cm', value.name = 'p_cm_val' )
-
+  ebola_risks_adj_long = melt(ebola_risks_adj, id.vars = c('HZ'), measure.vars = c(">=2",  ">=6", ">=10", ">=20"), variable.name = 'p_cm', value.name = 'p_cm_val' )
+  
   # pull appropriate values from expert data for concatination
   ebola_risks_long[, expert := 0]
   ebola_risks_long[, expert_date := nominal_forecast_date]
@@ -157,18 +175,29 @@ for (month in months){
   ebola_risks_long[, month := month]
   ebola_risks_long[, type := 'model_nfd']
   
+  ebola_risks_adj_long[, expert := e]
+  ebola_risks_adj_long[, expert_date := expert_date]
+  ebola_risks_adj_long[, horizon_start_date := e_data$horizon_start_date[1]]
+  ebola_risks_adj_long[, horizon_end_date := e_data$horizon_end_date[1]]
+  ebola_risks_adj_long[, delay := e_data$delay[1]]
+  ebola_risks_adj_long[, total_horizon := e_data$total_horizon[1]]
+  ebola_risks_adj_long[, month := month]
+  ebola_risks_adj_long[, type := 'model_adj_nfd']
+  
   
   
 
   # merge model and expert data with actual case outcomes for scoring
   model_data   = merge(model_data, actual_cases_allthreshs, by=c('HZ', 'p_cm'))
   ebola_risks_long = merge(ebola_risks_long[HZ %in% experts_data$HZ], actual_cases_allthreshs, by=c('HZ', 'p_cm'))
+  ebola_risks_adj_long = merge(ebola_risks_adj_long[HZ %in% experts_data$HZ], actual_cases_allthreshs, by=c('HZ', 'p_cm'))
   experts_data = merge(experts_data, actual_cases_allthreshs, by=c('HZ', 'p_cm'))
   
   # add the model and expert data for month to the overall results container
   expert_model_data_all = rbind(expert_model_data_all, experts_data)
   expert_model_data_all = rbind(expert_model_data_all, model_data)
   expert_model_data_all = rbind(expert_model_data_all, ebola_risks_long)
+  expert_model_data_all = rbind(expert_model_data_all, ebola_risks_adj_long)
 }
 
 
@@ -176,7 +205,7 @@ for (month in months){
 expert_model_data_all[, score_bri := mapply(FUN=function(x, y){BrierScore(x, y)}, x=p_cm_val, y=reported_cases)]
 expert_model_data_all[, score_log := mapply(FUN=function(x, y){log_score(x, y)}, x=p_cm_val, y=reported_cases)]
 
-write.csv(expert_model_data_all, 'outputs/indevidual_results_with_scores.csv') 
+write.csv(expert_model_data_all, 'outputs/indevidual_results_with_scores_adj.csv') 
 
 expert_model_data_all[, expert := as.character(expert)]
 

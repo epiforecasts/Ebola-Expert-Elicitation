@@ -8,7 +8,7 @@ library(viridis)
 
 
 results_data = fread('outputs/indevidual_results_with_scores.csv')
-sf::sf_use_s2(FALSE)
+#sf::sf_use_s2(FALSE)
 
 
 library(rgeoboundaries)
@@ -95,9 +95,9 @@ p_quest = ggplot()+
         plot.title  = element_text(size=20))+
   ggtitle('C')
 
-info_maps = p_provinces + p_cases + p_quest
+info_maps = p_cases+ p_quest+ p_provinces   
 
-ggsave('plots/info_maps_figure_countries.pdf', info_maps, width = 15, height=7)
+ggsave('plots/info_maps_figure_countries.pdf', info_maps, width = 17, height=7)
 
 
 results_data[,c('month', 'for')]

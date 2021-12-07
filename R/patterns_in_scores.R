@@ -1,7 +1,8 @@
 library(data.table)
 library(lubridate)
 library(viridis)
-
+library(ggbeeswarm)
+library(wesanderson)
 
 
 expert_results = fread(paste0(experts_path, '/Outputs/results_', month,'.csv'))
@@ -32,20 +33,65 @@ results_covar[, rc_str := as.character(reported_cases)]
 results_covar[, popband := cut(results_covar$population_density, breaks=c(0, 5e5, 1e7, Inf))]
 results_covar[, delayband := cut(delay, breaks = c(0,5,10,15,Inf), right=FALSE)]
 
-ggplot(results_covar[type != 'model_nfd']) + 
-  geom_histogram(aes(x=score_bri, group=type, fill=type), position='dodge', bins=10) + 
-  facet_grid(p_cm~popband, scales = "free")+
-  theme_minimal()
+popband.labs <- c('Low Density', 'Medium Density', 'High Density')
+names(popband.labs) <- levels(results_covar$popband)
 
-ggplot() + 
-  geom_histogram(data=results_covar[type != 'model_nfd'], aes(y = score_bri, group=type, fill=type),  position='dodge', bins=10) + 
-  facet_grid(p_cm ~ rc_str, scales = "free")+
-  theme_minimal()
+delayband.labs <- c('0-4 days', '5-9 days', '10-14 days', '15+ days')
+names(delayband.labs) <- levels(results_covar$delayband)
 
-ggplot() + 
-  geom_histogram(data=results_covar[type != 'model_nfd'], aes(y = score_bri, group=type, fill=type),  position='dodge', bins=10) + 
-  facet_grid(p_cm ~ delayband, scales = "free")+
-  theme_minimal()
+rc.labs <- c('No', 'Yes')
+names(rc.labs) <- c('0','1')
+
+
+pal = c(wes_palette("Zissou1", n=5, type='discrete')[4], wes_palette("Zissou1", n=5, type='discrete')[5])
+
+
+p_1 = 
+  ggplot(results_covar[type != 'model_nfd']) + 
+  geom_boxplot(data=results_covar[type != 'model_nfd'], aes(y = score_bri, x=type, fill=type),color= 'grey', width=.5) + 
+  facet_grid(p_cm~popband, scales = "free", labeller=labeller(popband = popband.labs))+
+  theme_minimal()+ 
+  ylab('Briar Score') +
+  xlab('')+
+  ggtitle('Population density')+
+  scale_fill_manual(values = pal)+
+  theme(
+    legend.position = 'none',
+    strip.text.y = element_blank()
+  )+
+  theme(panel.spacing.y = unit(1, "cm"))
+
+
+p_2 = 
+  ggplot() + 
+  geom_boxplot(data=results_covar[type != 'model_nfd'], aes(y = score_bri, x=type, fill=type),color= 'grey', width=.5) + 
+  facet_grid(p_cm ~ rc_str, scales = "free", labeller=labeller(rc_str = rc.labs))+
+  theme_minimal()+ 
+  ylab('') +
+  xlab('')+
+  ggtitle('Threshold reached?')+
+  scale_fill_manual(values = pal)+
+  theme(
+    legend.position = 'none',
+    strip.text.y = element_blank()
+  )+
+  theme(panel.spacing.y = unit(1, "cm"))
+
+p_3= 
+  ggplot() + 
+  geom_boxplot(data=results_covar[type != 'model_nfd'], aes(y = score_bri, x=type, fill=type),color= 'grey', width=.5) + 
+  facet_grid(p_cm ~ delayband, scales = "free", labeller=labeller(delayband = delayband.labs))+
+  ylab('') +
+  xlab('')+
+  scale_fill_manual(values = pal)+
+  ggtitle('Delay to forecast period')+
+  theme_minimal()+
+  theme(legend.title = element_blank())+
+  theme(panel.spacing.y = unit(1, "cm"))
+
+pattern_plot = p_1 + p_2 + p_3 + plot_layout(widths = c(3, 2,4))
+
+ggsave('plots/pattern_plot.pdf', pattern_plot, width = 12, height=6)
 
 results_covar[type != 'model_nfd', rankp := frankv(p_cm_val, order=-1, ties.method = 'min'), by=list(type, expert, p_cm, month)]
 
