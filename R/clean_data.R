@@ -166,7 +166,7 @@ for (month in months){
   ebola_risks_adj_long = melt(ebola_risks_adj, id.vars = c('HZ'), measure.vars = c(">=2",  ">=6", ">=10", ">=20"), variable.name = 'p_cm', value.name = 'p_cm_val' )
   
   # pull appropriate values from expert data for concatination
-  ebola_risks_long[, expert := 0]
+  ebola_risks_long[, expert := 100]
   ebola_risks_long[, expert_date := nominal_forecast_date]
   ebola_risks_long[, horizon_start_date := nominal_forecast_date]
   ebola_risks_long[, horizon_end_date := e_data$horizon_end_date[1]]
@@ -175,14 +175,14 @@ for (month in months){
   ebola_risks_long[, month := month]
   ebola_risks_long[, type := 'model_nfd']
   
-  ebola_risks_adj_long[, expert := e]
+  ebola_risks_adj_long[, expert := 200]
   ebola_risks_adj_long[, expert_date := expert_date]
   ebola_risks_adj_long[, horizon_start_date := e_data$horizon_start_date[1]]
   ebola_risks_adj_long[, horizon_end_date := e_data$horizon_end_date[1]]
   ebola_risks_adj_long[, delay := e_data$delay[1]]
   ebola_risks_adj_long[, total_horizon := e_data$total_horizon[1]]
   ebola_risks_adj_long[, month := month]
-  ebola_risks_adj_long[, type := 'model_adj_nfd']
+  ebola_risks_adj_long[, type := 'model_nfd']
   
   
   
@@ -219,3 +219,4 @@ ggplot(expert_model_data_all[p_cm == '>=2']) +
 
 experts_data[expert==13]
 e
+
