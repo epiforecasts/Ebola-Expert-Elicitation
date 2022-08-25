@@ -6,7 +6,7 @@ source("R/data_prep.r")
 sf::sf_use_s2(FALSE)
 DRC2_cases = extract_totcase_data(subarea=c("Nord-Kivu", "Ituri", "Tshopo", "Maniema", "Sud-Kivu", "Haut-Uele", "Bas-Uele"))
 
-timeseries = construct_time_series_mat(DRC2_cases)
+timeseries = construct_time_series_mat_old(DRC2_cases)
 
 DRC2_cases = DRC2_cases[order(DRC2_cases[['ADM2_NAME']]),]
 
@@ -19,7 +19,7 @@ thresholds = c(2, 6, 10, 20)
 scores = data.frame()
 scores_adj = data.frame()
 
-month = 'March_2020'
+month = 'December_2019'
 
 expert_results = fread(paste0('../Expert-elicitation/Outputs/results_', month,'.csv'))
 
@@ -35,7 +35,7 @@ expert_dates = c(nominal_forecast_date)#, sort(unique(expert_results$date)))
 
 
 
-for (d in 1:length(unique(expert_dates))){ #
+for (d in 1:length(unique(expert_dates)[1])){ #
   
   ellicitation_date = unique(expert_dates)[d]
   
@@ -67,9 +67,9 @@ for (d in 1:length(unique(expert_dates))){ #
   scores_adj = rbind(scores_adj, unlist(forecasts_adj$scores))
   
   
-  write.csv(data.table(plain_risks), paste0("forecasts/ebola_risks_", month, '_', as.character(ellicitation_date) ,".csv"))
-  write.csv(data.table(adjac_risks), paste0("forecasts/ebola_risks_adj_", month,'_', as.character(ellicitation_date) ,".csv"))
+  write.csv(data.table(plain_risks), paste0("forecasts/new/ebola_risks_", month, '_', as.character(ellicitation_date) ,".csv"))
+  write.csv(data.table(adjac_risks), paste0("forecasts/new/ebola_risks_adj_", month,'_', as.character(ellicitation_date) ,".csv"))
   
-  saveRDS(forecasts, paste0('forecasts/forecast_gravity_fit_', month, '_', as.character(ellicitation_date) ,".rds"))
-  saveRDS(forecasts_adj, paste0('forecasts/forecast_adjacency_fit_', month, '_', as.character(ellicitation_date) ,".rds"))
+  saveRDS(forecasts, paste0('forecasts/new/forecast_gravity_fit_', month, '_', as.character(ellicitation_date) ,".rds"))
+  saveRDS(forecasts_adj, paste0('forecasts/new/forecast_adjacency_fit_', month, '_', as.character(ellicitation_date) ,".rds"))
 }

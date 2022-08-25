@@ -4,7 +4,9 @@ library(ggplot2)
 library(DescTools)
 library(viridis)
 
-results_data = fread('outputs/indevidual_results_with_scores_additional_HZs.csv')
+results_data = fread('outputs/indevidual_results_with_scores_adj_additional.csv')
+results_data_surveyed = fread('outputs/indevidual_results_with_scores_adj.csv')
+
 
 # Ensemble forecasts
 
@@ -194,4 +196,94 @@ rank_plot =
   coord_cartesian(clip = "off")
 
 ggsave('plots/rankplot_add.pdf', width=8, height=8)
+
+
+introductions = all_results[p_cm == '>=2']
+introductions[, ADM2_NAME := str_to_title(HZ)]
+DRC2_cases = extract_totcase_data(subarea=c("Nord-Kivu", "Ituri", "Tshopo", "Maniema", "Sud-Kivu", "Haut-Uele", "Bas-Uele"))
+DRC2_cases = DRC2_cases[order(DRC2_cases[['ADM2_NAME']]),]
+
+
+DRC2_cases_simp =  st_simplify(DRC2_cases, preserveTopology = FALSE, dTolerance = 0.025)
+
+DRC2_intros_monthly_sf = st_sf(merge(introductions, DRC2_cases_simp[,c('ADM2_NAME', 'geometry')],by=c('ADM2_NAME')))
+
+
+case_maps = ggplot()+
+  geom_sf(data = DRC_boundary_simp, aes(fill=shapeName), size=0, alpha=0.8) +
+  scale_fill_brewer(name='Country', palette="Greys", guide='none')+
+  new_scale("fill") +
+  geom_sf(data = DRC2_cases_simp, fill='white', color='light gray', size=0.01)+
+  geom_sf(data=DRC2_intros_monthly_sf[DRC2_intros_monthly_sf$reported_cases==1,], color='black')+
+  facet_wrap(~month, nrow=1)+
+  xlim(c(27.5, 31))+
+  ylim(c(-2, 3))+
+  scale_fill_binned(name='Cases', type='viridis', option='magma' )+
+  theme_minimal()+
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), 
+        plot.title  = element_text(size=14),
+        legend.position="right") +
+  guides(fill = guide_colourbar(title.position="top", title.hjust = 0.5))+
+  ggtitle('C')
+
+
+start_date_period = lubridate::floor_date(lubridate::my('October_2019'), 'month')
+start_date_data = timeseries$dates[1]
+
+start_day_period = as.numeric(start_date_period - start_date_data)
+
+dim(timeseries_mat)
+
+dim(tail(t(timeseries_mat), -(start_day_period-1)))
+
+t(tail(t(timeseries_mat), -(start_day_period-1)))
+
+case_table = timeseries_mat
+names = head(timeseries$dates, dim(timeseries_mat)[2])
+colnames(case_table) = as.character(names)
+
+all_hz_cases = colSums(case_table)
+all_hz_cases_dt = cbind(data.table(ADM2_NAME ='All',  totpop2019 = 0), t(data.table(all_hz_cases)))
+
+
+
+DRC2_cases_final_ep = cbind(data.table(DRC2_cases[,c('ADM2_NAME', "totpop2019")]), case_table)[,-c('geometry')]
+colnames(all_hz_cases_dt) = colnames(DRC2_cases_final_ep)
+DRC2_cases_final_ep = rbind(DRC2_cases_final_ep, all_hz_cases_dt)
+
+DRC2_cases_final_ep_long =melt(DRC2_cases_final_ep, measure.vars = as.character(names),
+                               variable.name = "date", value.name = "cases")
+
+DRC2_cases_final_ep_long[, date := lubridate::ymd(date)]
+DRC2_cases_final_ep_long[, month := lubridate::month(date, label=TRUE)]
+DRC2_cases_final_ep_long[, month := factor(month, levels=c('Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'))]
+
+
+
+
+HZs_included_rule = list()
+HZs_included_actual = list()
+months = c('November_2019', 'December_2019', 'January_2020', 'February_2020', 'March_2020')
+for (mo in months){ 
+  
+  month_before = lubridate::floor_date(lubridate::my(mo)-1, 'month')-30
+  
+  DRC2_cases_final_ep_long[,total_cases:=0]
+  
+  first_interview = min(results_data_surveyed[month == mo,]$expert_date)
+  
+  cases_from = first_interview -14
+  #cases_from = month_before
+  print(c(first_interview, cases_from))
+  
+  DRC2_cases_final_ep_long[date>=cases_from & date<first_interview, total_cases := sum(cases), by=c('ADM2_NAME')]
+  HZs_included_rule[[mo]] = unique(DRC2_cases_final_ep_long[total_cases > 0,]$ADM2_NAME)
+  HZs_included_actual[[mo]] = unique(results_data_surveyed[month == mo,]$HZ)
+  }
+  
 

@@ -82,7 +82,7 @@ for (month in months){
     DRC2_cases_df['ADM2_NAME'] = str_to_upper(unlist(DRC2_cases_df['ADM2_NAME']))
     
     # filter out as a table of HZ and outcome for HZs of interest
-    actual_cases = DRC2_cases_df[,c("ADM2_NAME", "reported_cases")] %>% filter(ADM2_NAME %in% unlist(unique(experts_data[,'HZ'])))
+    actual_cases = DRC2_cases_df[,c("ADM2_NAME", "reported_cases")]
     
     # set appropriate collums for merge with expert data
     actual_cases['p_cm'] = paste0('>=', thresh)
@@ -130,7 +130,7 @@ for (month in months){
     ebola_risks_long[, type := 'model']
     
     # add to overall model data container 
-    model_data = rbind(model_data, ebola_risks_long[HZ %in% e_data[expert == e]$HZ])
+    model_data = rbind(model_data, ebola_risks_long)
 
     
   }
@@ -161,9 +161,11 @@ for (month in months){
   
 
   # merge model and expert data with actual case outcomes for scoring
-  model_data   = merge(model_data, actual_cases_allthreshs, by=c('HZ', 'p_cm'))
-  ebola_risks_long = merge(ebola_risks_long[HZ %in% experts_data$HZ], actual_cases_allthreshs, by=c('HZ', 'p_cm'))
+  model_data   = left_join(model_data, actual_cases_allthreshs, by=c('HZ', 'p_cm'))
+  ebola_risks_long = left_join(ebola_risks_long, actual_cases_allthreshs, by=c('HZ', 'p_cm'))
   experts_data = merge(experts_data, actual_cases_allthreshs, by=c('HZ', 'p_cm'))
+  
+
   
   # add the model and expert data for month to the overall results container
   expert_model_data_all = rbind(expert_model_data_all, experts_data)
@@ -186,7 +188,8 @@ ggplot(expert_model_data_all[p_cm == '>=2']) +
   scale_color_discrete()
 
 
+expert_model_data_all_survey = fread('outputs/indevidual_results_with_scores_adj.csv')
 
 
-experts_data[expert==13]
-e
+
+
