@@ -31,7 +31,7 @@ nominal_forecast_date = lubridate::floor_date(lubridate::my(month), 'month')
 forecast_to_day = as.numeric(forcast_to_date - start_date)
 forecast_from_day = as.numeric(nominal_forecast_date - start_date)
 
-expert_dates = c(nominal_forecast_date)#, sort(unique(expert_results$date)))
+expert_dates = c(nominal_forecast_date, sort(unique(expert_results$date)))
 
 
 
