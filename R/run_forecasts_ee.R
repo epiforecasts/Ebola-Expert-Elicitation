@@ -35,7 +35,7 @@ expert_dates = c(nominal_forecast_date)#, sort(unique(expert_results$date)))
 
 
 
-for (d in 1:length(unique(expert_dates)[1])){ #
+for (d in 1:length(unique(expert_dates))){ #
   
   ellicitation_date = unique(expert_dates)[d]
   
