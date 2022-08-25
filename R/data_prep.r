@@ -38,7 +38,7 @@ extract_totcase_data <- function(subarea = FALSE, case_type='confirmed_cases')
   colnames(DRC2_drc)[colnames(DRC2_drc)=="name"] <- "ADM2_NAME"                                         # sort out column names
   DRC2_drc = left_join(DRC2_drc, POPDATA, by = "ADM2_NAME")
 
-  if (subarea != FALSE) {
+  if (subarea[[1]] != FALSE) {
 
     DRC2_drc = DRC2_drc[DRC2_drc$ADM1_NAME %in% subarea, ]                                              # filter data by province
 
