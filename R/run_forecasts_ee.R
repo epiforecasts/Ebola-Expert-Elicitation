@@ -19,7 +19,7 @@ thresholds = c(2, 6, 10, 20)
 scores = data.frame()
 scores_adj = data.frame()
 
-month = 'December_2019'
+month = 'November_2019'
 
 expert_results = fread(paste0('../Expert-elicitation/Outputs/results_', month,'.csv'))
 
