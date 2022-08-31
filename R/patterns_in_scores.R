@@ -3,10 +3,18 @@ library(lubridate)
 library(viridis)
 library(ggbeeswarm)
 library(wesanderson)
+library(stringr)
+library(patchwork)
+sf::sf_use_s2(FALSE)
+
+source('R/data_prep.R')
+
+library(sf)
+
 
 
 expert_results = fread(paste0(experts_path, '/Outputs/results_', month,'.csv'))
-results_data = fread('outputs/indevidual_results_with_scores.csv')
+results_data = fread('outputs/indevidual_results_with_scores_adj.csv')
 
 ggplot(results_data[p_cm == '>=2']) + 
   geom_point(aes(x=total_horizon, y=score_bri, color=type, shape=type)) + 
@@ -88,6 +96,37 @@ p_3=
   theme_minimal()+
   theme(legend.title = element_blank())+
   theme(panel.spacing.y = unit(1, "cm"))
+
+
+p_4 = 
+  ggplot(results_covar[!is.na(institution)]) + 
+  geom_boxplot(aes(y = score_bri, x=experience.ide, fill=experience.ide),color= 'grey', width=.5) + 
+  facet_grid(p_cm~month, scales = "free", labeller=labeller(popband = popband.labs))+
+  theme_minimal()+ 
+  ylab('Briar Score') +
+  xlab('')+
+  ggtitle('Population density')+
+  scale_fill_manual(values = pal)+
+  theme(
+    legend.position = 'none',
+    strip.text.y = element_blank()
+  )+
+  theme(panel.spacing.y = unit(1, "cm"))
+
+p_5 = 
+  ggplot(results_covar[!is.na(institution)]) + 
+  geom_boxplot(aes(y = score_bri, x=last.in.field, fill=last.in.field),color= 'grey', width=.5) + 
+  facet_grid(p_cm~month, scales = "free", labeller=labeller(popband = popband.labs))+
+  theme_minimal()+ 
+  ylab('Briar Score') +
+  xlab('')+
+  ggtitle('Population density')+
+  theme(
+    legend.position = 'none',
+    strip.text.y = element_blank()
+  )+
+  theme(panel.spacing.y = unit(1, "cm"))
+
 
 pattern_plot = p_1 + p_2 + p_3 + plot_layout(widths = c(3, 2,4))
 

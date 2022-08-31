@@ -49,6 +49,10 @@ for (month in months){
   # load expert ellicitaion data 
   experts_data = fread(paste0(experts_path, '/Outputs/results_', month, '_cm.csv'))
   
+  experts_data_full = fread(paste0(experts_path, '/Outputs/results_', month, '.csv'))
+  
+  experts_info = unique(experts_data_full[, c('expert', 'institution', 'last.in.field', 'experience.ide')])
+  
   experts_data[experts_data$HZ == 'NYANKUNDE','HZ'] = 'NYAKUNDE'
   
   #set appropriate column values 
@@ -193,11 +197,15 @@ for (month in months){
   ebola_risks_adj_long = merge(ebola_risks_adj_long[HZ %in% experts_data$HZ], actual_cases_allthreshs, by=c('HZ', 'p_cm'))
   experts_data = merge(experts_data, actual_cases_allthreshs, by=c('HZ', 'p_cm'))
   
+  experts_data = merge(experts_data, experts_info, by=c('expert'), how='outer')
+  
   # add the model and expert data for month to the overall results container
-  expert_model_data_all = rbind(expert_model_data_all, experts_data)
-  expert_model_data_all = rbind(expert_model_data_all, model_data)
-  expert_model_data_all = rbind(expert_model_data_all, ebola_risks_long)
-  expert_model_data_all = rbind(expert_model_data_all, ebola_risks_adj_long)
+  expert_model_data_all = rbind(expert_model_data_all, experts_data, fill=TRUE)
+  expert_model_data_all = rbind(expert_model_data_all, model_data, fill=TRUE)
+  expert_model_data_all = rbind(expert_model_data_all, ebola_risks_long, fill=TRUE)
+  expert_model_data_all = rbind(expert_model_data_all, ebola_risks_adj_long, fill=TRUE)
+  
+
 }
 
 
@@ -215,8 +223,4 @@ ggplot(expert_model_data_all[p_cm == '>=2']) +
   scale_color_discrete()
 
 
-
-
-experts_data[expert==13]
-e
 
