@@ -107,6 +107,7 @@ sbhz_plot =
   theme(axis.text.x = element_text(angle=90))
 
 ggsave('plots/score_by_hz.pdf', sbhz_plot, width=10, height=15)
+ggsave('plots/score_by_hz.png', sbhz_plot, width=10, height=15, units='in')
 
 
 sbmo_plot = 
@@ -124,6 +125,7 @@ sbmo_plot =
   ggtitle('Monthly Performance')
 
 ggsave('plots/score_by_mo.pdf', sbmo_plot, width=10, height=10)
+ggsave('plots/score_by_mo.png', sbmo_plot, width=10, height=10, units='in')
 
 sbov_plot = 
   ggplot() + 
@@ -144,6 +146,8 @@ overall_score_plot = sbov_plot + sbmo_plot +  plot_layout(widths = c(1, 3))
 
 
 ggsave('plots/overall_score.pdf', overall_score_plot, width=15, height=8)
+ggsave('plots/overall_score.png', overall_score_plot, width=15, height=8, units='in')
+
 
 
 all_results[,rankp := frankv(risk_value, order=-1, ties.method = 'first'), by=list(type, expert, p_cm, month)]
@@ -222,6 +226,7 @@ rank_plot =
   coord_cartesian(clip = "off")
 
 ggsave('plots/rankplot.pdf', width=8, height=8)
+ggsave('plots/rankplot.png', width=8, height=8, units = 'in')
 
 
 exp_results = scores_by_mnth[type =='expert']

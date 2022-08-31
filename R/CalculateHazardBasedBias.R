@@ -3,6 +3,7 @@ library(lubridate)
 library(viridis)
 library(ggbeeswarm)
 library(wesanderson)
+library(patchwork)
 
 
 results_data = fread('outputs/indevidual_results_with_scores_adj.csv')
@@ -88,3 +89,4 @@ hr_full = (hr_month/hr_all) + plot_layout(heights = c(5, 1))
 
 
 ggsave('plots/bias.pdf',hr_full, width=15, height=8)
+ggsave('plots/bias.png',hr_full, width=15, height=8, units= 'in')
