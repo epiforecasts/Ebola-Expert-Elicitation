@@ -8,10 +8,25 @@ results_data = fread('outputs/indevidual_results_with_scores_adj_additional.csv'
 results_data_surveyed = fread('outputs/indevidual_results_with_scores_adj.csv')
 
 
+for (m in unique(results_data$month)){
+
+  skel_tab = unique(results_data_surveyed[ month == m & type=='expert' & !(expert %in%  unique(results_data[month == m, ]$expert)),
+                                           -c('V1', 'HZ', 'p_cm', 'p_cm_val', 'reported_cases', 'score_bri', 'score_log', 'institution', 'last.in.field', 'experience.ide')])
+  sk2 = CJ(expert = unique(skel_tab$expert), HZ = unique(results_data[month == m, ]$HZ))
+  non_nominators = merge(skel_tab, sk2, by = c('expert'))
+  non_nominators = merge(non_nominators, unique(results_data[month == m, c('HZ', 'reported_cases')]), by = c('HZ'))
+  
+  non_nominators[, ':=' (V1 = NA, p_cm = '>=2', p_cm_val = 0, score_bri = NA, score_log = NA)]
+  
+  results_data = rbind(results_data, non_nominators)
+  
+}
+
+
 # Ensemble forecasts
 
 
-# mean ensemble with just experts
+# mean ensemble with just experts
 results_data[, mean_expert := mean(p_cm_val), by = c('HZ', 'type', 'p_cm', 'month')]
 
 # number of experts for ensemble weighting
