@@ -25,6 +25,8 @@ for (m in unique(results_data$month)){
 
 # Ensemble forecasts
 
+results_data = results_data[p_cm == '>=2',]
+
 
 # mean ensemble with just experts
 results_data[, mean_expert := mean(p_cm_val), by = c('HZ', 'type', 'p_cm', 'month')]

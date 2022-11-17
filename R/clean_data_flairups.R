@@ -2,6 +2,8 @@ library(data.table)
 library(lubridate)
 library(ggplot2)
 library(DescTools)
+library(stringr)
+
 
 log_score = function(risk_values,wherecaseswere){
   log_probs = wherecaseswere * log(abs(risk_values-1e-10)) + ((1 - wherecaseswere ) * log(1 - (abs(risk_values-1e-10))))
@@ -55,13 +57,13 @@ for (month in months){
   experts_data_surveyed[experts_data_surveyed$HZ == 'NYANKUNDE','HZ'] = 'NYAKUNDE'
   
   #set appropriate column values 
-  experts_data[,expert_date := lubridate::dmy(date)]  
-  experts_data[,horizon_end_date := forcast_to_date]
-  experts_data[,horizon_start_date := nominal_forecast_date]
-  experts_data[,delay:=horizon_start_date - expert_date]
-  experts_data[,total_horizon := horizon_end_date - expert_date]
-  experts_data[,month := month]
-  experts_data[,type := 'expert']
+  experts_data[, expert_date := lubridate::dmy(date)]  
+  experts_data[, horizon_end_date := forcast_to_date]
+  experts_data[, horizon_start_date := nominal_forecast_date]
+  experts_data[, delay:=horizon_start_date - expert_date]
+  experts_data[, total_horizon := horizon_end_date - expert_date]
+  experts_data[, month := month]
+  experts_data[, type := 'expert']
   
   # drop unwanted columns
   experts_data = experts_data[, -c('date', 'expert.date', 'V1')]
@@ -84,6 +86,8 @@ for (month in months){
     DRC2_cases_df = as.data.frame(DRC2_cases)
     DRC2_cases_df['ADM2_NAME'] = str_to_upper(unlist(DRC2_cases_df['ADM2_NAME']))
     
+    
+    
     # filter out as a table of HZ and outcome for HZs of interest
     actual_cases = DRC2_cases_df[,c("ADM2_NAME", "reported_cases")]
     
@@ -98,57 +102,57 @@ for (month in months){
   
   # find the modelled risks for each expert in the month
   model_data = data.table()
-  for(e in sort(unique(experts_data$expert))){
-    
-    # pull out relevant sub-set of expert data and find the date of the forecast
-    e_data = experts_data[expert == e]
-    expert_date = e_data$expert_date[1]
-    
-    # load model data for the relevant forecast date
-    ebola_risks = fread(paste0("forecasts/ebola_risks_", month,"_" , as.character(expert_date), ".csv"))
-    ebola_risks_adj = fread(paste0("forecasts/ebola_risks_adj_", month,"_" , as.character(expert_date), ".csv"))
-    
-    # select columns and reset column names and HZ case to be consistent with expert data 
-    ebola_risks = ebola_risks[, c('ADM2_NAME', 'risk_TH_2', 'risk_TH_6', 'risk_TH_10', 'risk_TH_20')]
-    colnames(ebola_risks) = c('HZ', ">=2",  ">=6", ">=10", ">=20")
-    
-    ebola_risks_adj = ebola_risks_adj[, c('ADM2_NAME', 'risk_TH_2', 'risk_TH_6', 'risk_TH_10', 'risk_TH_20')]
-    colnames(ebola_risks_adj) = c('HZ', ">=2",  ">=6", ">=10", ">=20")
-    
-    ebola_risks[, HZ := str_to_upper(HZ)]
-    ebola_risks_adj[, HZ := str_to_upper(HZ)]
-    
-    # convert outcomes to long format for concatination
-    ebola_risks_long = melt(ebola_risks, id.vars = c('HZ'), measure.vars = c(">=2",  ">=6", ">=10", ">=20"), variable.name = 'p_cm', value.name = 'p_cm_val' )
-    ebola_risks_adj_long = melt(ebola_risks_adj, id.vars = c('HZ'), measure.vars = c(">=2",  ">=6", ">=10", ">=20"), variable.name = 'p_cm', value.name = 'p_cm_val' )
-    
-    # pull appropriate values from expert data for concatination
-    ebola_risks_long[, expert := e]
-    ebola_risks_long[, expert_date := expert_date]
-    ebola_risks_long[, horizon_start_date := e_data$horizon_start_date[1]]
-    ebola_risks_long[, horizon_end_date := e_data$horizon_end_date[1]]
-    ebola_risks_long[, delay := e_data$delay[1]]
-    ebola_risks_long[, total_horizon := e_data$total_horizon[1]]
-    ebola_risks_long[, month := month]
-    ebola_risks_long[, type := 'model']
-    
-    ebola_risks_adj_long[, expert := e]
-    ebola_risks_adj_long[, expert_date := expert_date]
-    ebola_risks_adj_long[, horizon_start_date := e_data$horizon_start_date[1]]
-    ebola_risks_adj_long[, horizon_end_date := e_data$horizon_end_date[1]]
-    ebola_risks_adj_long[, delay := e_data$delay[1]]
-    ebola_risks_adj_long[, total_horizon := e_data$total_horizon[1]]
-    ebola_risks_adj_long[, month := month]
-    ebola_risks_adj_long[, type := 'model_adj']
-    
-    # add to overall model data container 
-    model_data = rbind(model_data, ebola_risks_long)
-    model_data = rbind(model_data, ebola_risks_adj_long)
-    
-
-    
-  }
-  
+  #for(e in sort(unique(experts_data$expert))){
+  #  
+  #  # pull out relevant sub-set of expert data and find the date of the forecast
+  #  e_data = experts_data[expert == e]
+  #  expert_date = e_data$expert_date[1]
+  #  
+  #  # load model data for the relevant forecast date
+  #  ebola_risks = fread(paste0("forecasts/ebola_risks_", month,"_" , as.character(expert_date), ".csv"))
+  #  ebola_risks_adj = fread(paste0("forecasts/ebola_risks_adj_", month,"_" , as.character(expert_date), ".csv"))
+  #  
+  #  # select columns and reset column names and HZ case to be consistent with expert data 
+  #  ebola_risks = ebola_risks[, c('ADM2_NAME', 'risk_TH_2', 'risk_TH_6', 'risk_TH_10', 'risk_TH_20')]
+  #  colnames(ebola_risks) = c('HZ', ">=2",  ">=6", ">=10", ">=20")
+  #  
+  #  ebola_risks_adj = ebola_risks_adj[, c('ADM2_NAME', 'risk_TH_2', 'risk_TH_6', 'risk_TH_10', 'risk_TH_20')]
+  #  colnames(ebola_risks_adj) = c('HZ', ">=2",  ">=6", ">=10", ">=20")
+  #  
+  #  ebola_risks[, HZ := str_to_upper(HZ)]
+  #  ebola_risks_adj[, HZ := str_to_upper(HZ)]
+  #  
+  #  # convert outcomes to long format for concatination
+  #  ebola_risks_long = melt(ebola_risks, id.vars = c('HZ'), measure.vars = c(">=2",  ">=6", ">=10", ">=20"), variable.name = 'p_cm', value.name = 'p_cm_val' )
+  #  ebola_risks_adj_long = melt(ebola_risks_adj, id.vars = c('HZ'), measure.vars = c(">=2",  ">=6", ">=10", ">=20"), variable.name = 'p_cm', value.name = 'p_cm_val' )
+  #  
+  #  # pull appropriate values from expert data for concatination
+  #  ebola_risks_long[, expert := e]
+  #  ebola_risks_long[, expert_date := expert_date]
+  #  ebola_risks_long[, horizon_start_date := e_data$horizon_start_date[1]]
+  #  ebola_risks_long[, horizon_end_date := e_data$horizon_end_date[1]]
+  #  ebola_risks_long[, delay := e_data$delay[1]]
+  #  ebola_risks_long[, total_horizon := e_data$total_horizon[1]]
+  #  ebola_risks_long[, month := month]
+  #  ebola_risks_long[, type := 'model']
+  #  
+  #  ebola_risks_adj_long[, expert := e]
+  #  ebola_risks_adj_long[, expert_date := expert_date]
+  #  ebola_risks_adj_long[, horizon_start_date := e_data$horizon_start_date[1]]
+  #  ebola_risks_adj_long[, horizon_end_date := e_data$horizon_end_date[1]]
+  #  ebola_risks_adj_long[, delay := e_data$delay[1]]
+  #  ebola_risks_adj_long[, total_horizon := e_data$total_horizon[1]]
+  #  ebola_risks_adj_long[, month := month]
+  #  ebola_risks_adj_long[, type := 'model_adj']
+  #  
+  #  # add to overall model data container 
+  #  model_data = rbind(model_data, ebola_risks_long)
+  #  model_data = rbind(model_data, ebola_risks_adj_long)
+  #  
+#
+  #  
+  #}
+  #
   
   # calculate risks of for the forecast at nominal forecast date 
   ebola_risks = fread(paste0("forecasts/ebola_risks_", month,"_" , as.character(nominal_forecast_date), ".csv"))
@@ -237,5 +241,5 @@ ggplot(expert_model_data_all[p_cm == '>=2']) +
 
 
 experts_data[expert==13]
-e
+
 
