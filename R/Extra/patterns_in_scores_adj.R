@@ -52,7 +52,8 @@ p_1 =
   geom_boxplot(data=results_covar[type != 'model_nfd'], aes(y = score_bri, x=type, fill=type),color= 'grey', width=.5) + 
   facet_grid(p_cm~popband, scales = "free", labeller=labeller(popband = popband.labs))+
   theme_minimal()+ 
-  ylab('Briar Score') +
+  scale_x_discrete(breaks=c())+
+  ylab('Brier Score') +
   xlab('')+
   ggtitle('Population density')+
   scale_fill_manual(values = pal)+
@@ -70,6 +71,7 @@ p_2 =
   theme_minimal()+ 
   ylab('') +
   xlab('')+
+  scale_x_discrete(breaks=c())+
   ggtitle('Threshold reached?')+
   scale_fill_manual(values = pal)+
   theme(
@@ -85,6 +87,7 @@ p_3=
   ylab('') +
   xlab('')+
   scale_fill_manual(values = pal)+
+  scale_x_discrete(breaks=c())+
   ggtitle('Delay to forecast period')+
   theme_minimal()+
   theme(legend.title = element_blank())+
@@ -93,7 +96,7 @@ p_3=
 pattern_plot = p_1 + p_2 + p_3 + plot_layout(widths = c(3, 2,4))
 
 ggsave('plots/pattern_plot.pdf', pattern_plot, width = 12, height=6)
-
+ggsave('plots/pattern_plot.png', pattern_plot, width = 12, height=6, units='in')
 results_covar[type != 'model_nfd', rankp := frankv(p_cm_val, order=-1, ties.method = 'min'), by=list(type, expert, p_cm, month)]
 
 results_covar[type != 'model_nfd' & delayband == '[0,5)' & p_cm == '>=2' & type=='expert']

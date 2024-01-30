@@ -27,6 +27,8 @@ results_data[, expert := factor(expert, levels=c("1", "2", "3", "4", "5",  "6", 
 
 results_data[, month := factor(month, levels=c("November_2019", "December_2019", "January_2020", "February_2020", "March_2020"))]
 
+results_data = results_data[month != "November_2019",]
+
 month.labs <- c('November', 'December', 'January', 'February', 'March')
 names(month.labs) <- c('November_2019', 'December_2019', 'January_2020', 'February_2020', 'March_2020')
 

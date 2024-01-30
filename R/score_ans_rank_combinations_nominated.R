@@ -1,26 +1,28 @@
 library(data.table)
-library(lubridate)
+library(tidyverse)
 library(ggplot2)
 library(DescTools)
 library(viridis)
+library(ggnewscale)
 
-results_data = fread('outputs/indevidual_results_with_scores_adj_additional.csv')
+
+results_data_uu = fread('outputs/indevidual_results_with_scores_adj_additional_uu.csv')
+results_data_um = fread('outputs/indevidual_results_with_scores_adj_additional_um.csv')
+results_data_lm = fread('outputs/indevidual_results_with_scores_adj_additional_lm.csv')
+results_data_ll = fread('outputs/indevidual_results_with_scores_adj_additional_ll.csv')
+
+results_data_uu[, convention := 'uu']
+results_data_um[, convention := 'um']
+results_data_lm[, convention := 'lm']
+results_data_ll[, convention := 'll']
+
+results_data_uu[p_cm_val < 0.05]$p_cm_val = 0 
+results_data_ll[p_cm_val < 0.05]$p_cm_val = 0.05 
+
+
 results_data_surveyed = fread('outputs/indevidual_results_with_scores_adj.csv')
 
-
-for (m in unique(results_data$month)){
-
-  skel_tab = unique(results_data_surveyed[ month == m & type=='expert' & !(expert %in%  unique(results_data[month == m, ]$expert)),
-                                           -c('V1', 'HZ', 'p_cm', 'p_cm_val', 'reported_cases', 'score_bri', 'score_log', 'institution', 'last.in.field', 'experience.ide')])
-  sk2 = CJ(expert = unique(skel_tab$expert), HZ = unique(results_data[month == m, ]$HZ))
-  non_nominators = merge(skel_tab, sk2, by = c('expert'))
-  non_nominators = merge(non_nominators, unique(results_data[month == m, c('HZ', 'reported_cases')]), by = c('HZ'))
-  
-  non_nominators[, ':=' (V1 = NA, p_cm = '>=2', p_cm_val = 0, score_bri = NA, score_log = NA)]
-  
-  results_data = rbind(results_data, non_nominators)
-  
-}
+results_data = do.call("rbind", list(results_data_uu, results_data_um, results_data_lm, results_data_ll))
 
 
 # Ensemble forecasts
@@ -29,21 +31,21 @@ results_data = results_data[p_cm == '>=2',]
 
 
 # mean ensemble with just experts
-results_data[, mean_expert := mean(p_cm_val), by = c('HZ', 'type', 'p_cm', 'month')]
+results_data[, mean_expert := mean(p_cm_val), by = c('HZ', 'type', 'p_cm', 'month', 'convention')]
 
 # number of experts for ensemble weighting
-results_data[, num_experts := .N, by = c('HZ', 'type', 'p_cm', 'month')]
+results_data[, num_experts := .N, by = c('HZ', 'type', 'p_cm', 'month', 'convention')]
 
 #calculate weighting of each expert (and model) such that model counts for 50%
-results_data[type != 'model',  weighting := (1./num_experts)/sum(1./num_experts), by = c('HZ', 'p_cm', 'month')]
+results_data[type != 'model',  weighting := (1./num_experts)/sum(1./num_experts), by = c('HZ', 'p_cm', 'month', 'convention')]
 # check weights sum to 1
-results_data[type != 'model',  weight_sense := sum(weighting), by = c('HZ', 'p_cm', 'month')]
+results_data[type != 'model',  weight_sense := sum(weighting), by = c('HZ', 'p_cm', 'month', 'convention')]
 # calculate weighted mean
-results_data[type != 'model',  mean_exp_mod  := sum(p_cm_val * weighting), by = c('HZ', 'p_cm', 'month')]
+results_data[type != 'model',  mean_exp_mod  := sum(p_cm_val * weighting), by = c('HZ', 'p_cm', 'month', 'convention')]
 
 # output tables of ensembles 
-mean_expert_data = unique(results_data[type == 'expert', c('HZ', 'p_cm', 'type', 'mean_expert', 'reported_cases', 'month')])
-mean_exp_mod_data = unique(results_data[type == 'expert', c('HZ', 'p_cm', 'mean_exp_mod', 'reported_cases', 'month')])
+mean_expert_data = unique(results_data[type == 'expert', c('HZ', 'p_cm', 'type', 'mean_expert', 'reported_cases', 'month', 'convention')])
+mean_exp_mod_data = unique(results_data[type == 'expert', c('HZ', 'p_cm', 'mean_exp_mod', 'reported_cases', 'month', 'convention')])
 
 # homogenise
 mean_exp_mod_data[, type := 'ensemble']
@@ -63,7 +65,7 @@ ensembles[, score_bri := mapply(FUN=function(x, y){BrierScore(x, y)}, x=risk_val
 ensembles[, score_log := mapply(FUN=function(x, y){log_score(x, y)}, x=risk_value, y=reported_cases)]
 
 # format plain results in same format for plotting
-slim_results = results_data[, c('HZ', 'p_cm', 'type', 'p_cm_val', 'reported_cases', 'month', 'score_bri', 'score_log', 'expert')]
+slim_results = results_data[, c('HZ', 'p_cm', 'type', 'p_cm_val', 'reported_cases', 'month', 'score_bri', 'score_log', 'expert', 'convention')]
 slim_results[, risk_value := p_cm_val]
 
 # combine plain and ensemble results
@@ -73,65 +75,95 @@ all_results[expert==0, expert:='model']
 
 
 # calculate combined scores by HZ (over all months) and by month (over all HZ) for each expert, model and ensemble
-all_results[, score_bri_hz := BrierScore(risk_value, reported_cases), by=c('HZ', 'p_cm', 'type', 'expert') ]
-all_results[, score_bri_mnth := BrierScore(risk_value, reported_cases), by=c('month', 'p_cm', 'type', 'expert') ]
+all_results[, score_bri_hz := BrierScore(risk_value, reported_cases), by=c('HZ', 'p_cm', 'type', 'expert', 'convention') ]
+all_results[, score_bri_mnth := BrierScore(risk_value, reported_cases), by=c('month', 'p_cm', 'type', 'expert', 'convention') ]
 
-all_results[, score_bri_hz := BrierScore(risk_value, reported_cases), by=c('HZ', 'p_cm', 'type', 'expert') ]
-all_results[, score_bri_mnth := BrierScore(risk_value, reported_cases), by=c('month', 'p_cm', 'type', 'expert') ]
+all_results[, score_bri_hz := BrierScore(risk_value, reported_cases), by=c('HZ', 'p_cm', 'type', 'expert', 'convention') ]
+all_results[, score_bri_mnth := BrierScore(risk_value, reported_cases), by=c('month', 'p_cm', 'type', 'expert', 'convention') ]
 
 # set strings to factors for plotting orders
 all_results[, p_cm := factor(p_cm, levels=c('>=2', '>=6', '>=10', '>=20'))]
-all_results[, expert := factor(expert, levels=c("1", "2", "3", "4", "5",  "6", "7", "8", "9",  "10", "11", "12", "13", "14", "15", "ensemble_just_experts", "ensemble_with_model",    "model"))]
+all_results[, expert := factor(expert, levels=c("1", "2", "3", "4", "5",  "6", "7", "8", "9",  "10", "11", "12", "13", "14", "15", "ensemble_just_experts", "ensemble_with_model",    '100', '200'))]
 all_results[, month := factor(month, levels=c("November_2019","December_2019", "January_2020", "February_2020", "March_2020"))]
 
 # extract tables for each HZ and month wise forecast scoring
-scores_by_hz = unique(all_results[,c('HZ', 'p_cm', 'type', 'expert', 'score_bri_hz')])[type != 'model']
-scores_by_mnth = unique(all_results[,c('month', 'p_cm', 'type', 'expert', 'score_bri_mnth')])[type != 'model']
+scores_by_hz = unique(all_results[,c('HZ', 'p_cm', 'type', 'expert', 'score_bri_hz', 'convention')])[type != 'model']
+scores_by_mnth = unique(all_results[,c('month', 'p_cm', 'type', 'expert', 'score_bri_mnth', 'convention')])[type != 'model']
 
 
 # Create plots
 
-sbhz_plot = 
-  ggplot() + 
-  geom_violin(data = scores_by_hz[type=='expert'], aes(x=1, y=score_bri_hz), color='white', alpha=0.8, fill='turquoise')+ 
-  geom_point(data=scores_by_hz[type=='expert'], aes(x = 1, y=score_bri_hz, color=expert), alpha=0.5, position = position_dodge(width = 0.5), size=3) + 
-  geom_point(data=scores_by_hz[type=='ensemble'],aes(x = 3, y=score_bri_hz, shape=expert), position = position_dodge(width = 0.5), color='orange', size=3) + 
-  geom_point(data=scores_by_hz[type=='model_nfd'],aes(x = 2, y=score_bri_hz), position = position_dodge(width = 1.0), color='red', shape=20, size=3) + 
-  facet_grid(HZ~p_cm, as.table = F) + 
-  scale_x_discrete(limits=c(1,2,3), labels=c('experts', 'model', 'ensembles'), name = 'Forecast type')+
-  ylab('Briar Score')+ 
-  theme_minimal()+
-  theme(axis.text.x = element_text(angle=90))
-
-ggsave('plots/score_by_hz_add.pdf', sbhz_plot, width=10, height=15)
 
 
 sbmo_plot = 
   ggplot() + 
-  geom_violin(data = scores_by_mnth[type=='expert'], aes(x=1, y=score_bri_mnth), color='white', alpha=0.8, fill='turquoise')+ 
-  geom_point(data=scores_by_mnth[type=='expert'], aes(x = 1, y=score_bri_mnth, color=expert), alpha=0.5, position = position_dodge(width = 0.5), size=3) + 
-  geom_point(data=scores_by_mnth[type=='ensemble'],aes(x = 3, y=score_bri_mnth, shape=expert), position = position_dodge(width = 0.5), color='orange', size=3) + 
-  geom_point(data=scores_by_mnth[type=='model_nfd'],aes(x = 2, y=score_bri_mnth), position = position_dodge(width = 1.0), color='red', shape=20, size=3) + 
-  facet_grid(month~p_cm,labeller=labeller( month = month.labs)) + 
-  scale_x_discrete(limits=c(1,2,3), labels=c('experts', 'model', 'ensembles'), name = 'Forecast type')+
-  ylab('Briar Score')+ 
+  geom_violin(data = scores_by_mnth[type=='expert' & convention=='uu'], aes(x=1, y=score_bri_mnth), color='white', alpha=0.8, fill='orange')+ 
+  geom_point(data=scores_by_mnth[type=='expert'& convention=='uu'], aes(x = 1, y=score_bri_mnth, color=expert), alpha=0.5, position = position_dodge(width = 0.5), size=3) + 
+  geom_point(data=scores_by_mnth[type=='ensemble'& convention=='uu'],aes(x = 2, y=score_bri_mnth, shape=expert), position = position_dodge(width = 0.5), color='orange', size=3) + 
+  
+  geom_violin(data = scores_by_mnth[type=='expert'& convention=='ll'], aes(x=1, y=score_bri_mnth), color='white', alpha=0.8, fill='turquoise')+ 
+  geom_point(data=scores_by_mnth[type=='expert'& convention=='ll'], aes(x = 1, y=score_bri_mnth, color=expert), alpha=0.5, position = position_dodge(width = 0.5), size=3) + 
+  geom_point(data=scores_by_mnth[type=='ensemble'& convention=='ll'],aes(x = 2, y=score_bri_mnth, shape=expert), position = position_dodge(width = 0.5), color='turquoise', size=3) + 
+  guides(color=guide_legend(ncol=2))+
+  
+  new_scale_colour() +
+  
+  geom_point(data=scores_by_mnth[type=='model_nfd'& (convention %in% c('ll', 'uu'))],aes(x = 4, y=score_bri_mnth, shape=expert, color=convention), position = position_dodge(width = 1.0), size=3) + 
+  scale_color_manual(values = c( 'turquoise', 'orange'), labels = c('p=0.00', 'p=0.05'))+
+  facet_grid(convention~month,labeller=labeller( month = month.labs), scale='free_y') + 
+  scale_x_discrete(limits=c(1,2,4), labels=c('experts', 'ensembles', 'models'), name = 'Forecast type')+
+  scale_shape_discrete(labels = c('Gravity Model', 'Adjacency Model', 'Ensemble \n- experts', 'Ensemble \n- experts and models'))+
+  ylab('Brier Score')+ 
   theme_minimal()+
   theme(axis.text.x = element_text(angle=90))
 
+ggsave(sbmo_plot, filename = 'plots/pred_introductions_scores.pdf', width=10, height=5, units='in')
 
-sbhzmo_plot = 
+ggsave(sbmo_plot, filename = 'plots/pred_introductions_scores.png', width=10, height=5, units='in')
+
+
+sbmo_plot_p0 = 
   ggplot() + 
-  geom_violin(data = all_results[type=='expert' & p_cm =='>=2'], aes(x=1, y=score_bri), color='white', alpha=0.8, fill='turquoise')+ 
-  geom_point(data= all_results[type=='expert' & p_cm =='>=2'], aes(x = 1, y=score_bri, color=expert), alpha=0.5, position = position_dodge(width = 0.5), size=3) + 
-  geom_point(data= all_results[type=='ensemble' & p_cm =='>=2'],aes(x = 3, y=score_bri, shape=expert), position = position_dodge(width = 0.5), color='orange', size=3) + 
-  geom_point(data= all_results[type=='model_nfd' & p_cm =='>=2'],aes(x = 2, y=score_bri), position = position_dodge(width = 1.0), color='red', shape=20, size=3) + 
-  facet_grid(HZ~month,labeller=labeller( month = month.labs)) + 
-  scale_x_discrete(limits=c(1,2,3), labels=c('experts', 'model', 'ensembles'), name = 'Forecast type')+
-  ylab('Briar Score')+ 
+  geom_violin(data = scores_by_mnth[type=='expert' & convention=='uu'], aes(x=1, y=score_bri_mnth), color='white', alpha=0.8, fill='turquoise')+ 
+  geom_point(data=scores_by_mnth[type=='expert'& convention=='uu'], aes(x = 1, y=score_bri_mnth, color=expert), alpha=0.5, position = position_dodge(width = 0.5), size=3) + 
+  geom_point(data=scores_by_mnth[type=='ensemble'& convention=='uu'],aes(x = 3, y=score_bri_mnth, shape=expert), position = position_dodge(width = 0.5), color='orange', size=3) + 
+  
+  #geom_violin(data = scores_by_mnth[type=='expert'& convention=='ll'], aes(x=1, y=score_bri_mnth), color='white', alpha=0.8, fill='turquoise')+ 
+  #geom_point(data=scores_by_mnth[type=='expert'& convention=='ll'], aes(x = 1, y=score_bri_mnth, color=expert), alpha=0.5, position = position_dodge(width = 0.5), size=3) + 
+  #geom_point(data=scores_by_mnth[type=='ensemble'& convention=='ll'],aes(x = 2, y=score_bri_mnth, shape=expert), position = position_dodge(width = 0.5), color='turquoise', size=3) + 
+  guides(color=guide_legend(ncol=2))+
+
+  geom_point(data=scores_by_mnth[type=='model_nfd'& convention=='uu'],aes(x = 5, y=score_bri_mnth, shape=expert), position = position_dodge(width = 1.0), size=3, color='tomato') + 
+
+  facet_grid(convention~month,labeller=labeller( month = month.labs), scale='free_y') + 
+  scale_x_discrete(limits=c(1,3,5), labels=c('experts', 'ensembles','model'), name = 'Forecast type')+
+  scale_shape_discrete(name='', labels = c('Gravity Model', 'Adjacency Model', 'Ensemble \n- experts', 'Ensemble \n- experts and models'))+
+  ylab('Brier Score')+ 
   theme_minimal()+
   theme(axis.text.x = element_text(angle=90))
 
-ggsave('plots/score_by_mo_add.pdf', sbmo_plot, width=10, height=10)
+
+sbmo_plot_p005 = 
+  ggplot() + 
+  #geom_violin(data = scores_by_mnth[type=='expert' & convention=='uu'], aes(x=1, y=score_bri_mnth), color='white', alpha=0.8, fill='turquoise')+ 
+  #geom_point(data=scores_by_mnth[type=='expert'& convention=='uu'], aes(x = 1, y=score_bri_mnth, color=expert), alpha=0.5, position = position_dodge(width = 0.5), size=3) + 
+  #geom_point(data=scores_by_mnth[type=='ensemble'& convention=='uu'],aes(x = 3, y=score_bri_mnth, shape=expert), position = position_dodge(width = 0.5), color='orange', size=3) + 
+  
+  geom_violin(data = scores_by_mnth[type=='expert'& convention=='ll'], aes(x=1, y=score_bri_mnth), color='white', alpha=0.8, fill='turquoise')+ 
+  geom_point(data=scores_by_mnth[type=='expert'& convention=='ll'], aes(x = 1, y=score_bri_mnth, color=expert), alpha=0.5, position = position_dodge(width = 0.5), size=3) + 
+  geom_point(data=scores_by_mnth[type=='ensemble'& convention=='ll'],aes(x = 3, y=score_bri_mnth, shape=expert), position = position_dodge(width = 0.5), color='orange', size=3) + 
+  guides(color=guide_legend(ncol=2))+
+  
+  geom_point(data=scores_by_mnth[type=='model_nfd'& convention=='ll'],aes(x = 5, y=score_bri_mnth, shape=expert), position = position_dodge(width = 1.0), size=3, color='tomato') + 
+  
+  facet_grid(convention~month,labeller=labeller( month = month.labs), scale='free_y') + 
+  scale_x_discrete(limits=c(1,3,5), labels=c('experts', 'ensembles','model'), name = 'Forecast type')+
+  scale_shape_discrete(name='', labels = c('Gravity Model', 'Adjacency Model', 'Ensemble \n- experts', 'Ensemble \n- experts and models'))+
+  ylab('Briar Score')+ 
+  theme_minimal()+
+  
+  theme(axis.text.x = element_text(angle=90))
+
 
 
 all_results[,rankp := frankv(risk_value, order=-1, ties.method = 'first'), by=list(type, expert, p_cm, month)]
@@ -230,7 +262,7 @@ case_maps = ggplot()+
   geom_sf(data = DRC_boundary_simp, aes(fill=shapeName), size=0, alpha=0.8) +
   scale_fill_brewer(name='Country', palette="Greys", guide='none')+
   new_scale("fill") +
-  geom_sf(data = DRC2_cases_simp, fill='white', color='light gray', size=0.01)+
+  geom_sf(data = DRC2_cases_simp, fill='white', color='light gray', size=0.1)+
   geom_sf(data=DRC2_intros_monthly_sf[DRC2_intros_monthly_sf$reported_cases==1,], color='black')+
   facet_wrap(~month, nrow=1)+
   xlim(c(27.5, 31))+

@@ -14,6 +14,7 @@ results_data = fread('outputs/indevidual_results_with_scores.csv')
 library(rgeoboundaries)
 DRC_boundary <- geoboundaries(c("Democratic Republic of the Congo", "Uganda", "Rwanda", "Central African Republic", "South Sudan", "Burundi", "United Republic of Tanzania"))
 
+saveRDS(DRC_boundary, file = 'data/shapes/DRC_boundary.rds')
 
 DRC_boundary_simp = st_simplify(DRC_boundary, preserveTopology = FALSE, dTolerance = 0.025)
 
@@ -36,7 +37,7 @@ p_provinces = ggplot() +
   geom_sf(data = DRC_boundary_simp, aes(fill=shapeName), size=0, alpha=0.8) +
   scale_fill_brewer(name='Country', palette="Greys")+
   new_scale("fill") +
-  geom_sf(data=DRC2_cases_simp, aes(fill=ADM1_NAME), color='lightgray', size=0.01) + 
+  geom_sf(data=DRC2_cases_simp, aes(fill=ADM1_NAME), color='lightgray', size=0.1) + 
   scale_fill_discrete(name='Province') +
   geom_rect(aes(xmin = 27.5, xmax = 31, ymin = -2, ymax = 3), fill='transparent', color='red', size=1) +
   xlim(c(23, 32))+
@@ -57,8 +58,8 @@ p_cases = ggplot() +
   geom_sf(data = DRC_boundary_simp, aes(fill=shapeName), size=0, alpha=0.8) +
   scale_fill_brewer(name='Country', palette="Greys", guide='none')+
   new_scale("fill") +
-  geom_sf(data = DRC2_cases[DRC2_cases_simp$cases_to_date == 0,], fill='white', color='grey', alpha=0.5, size=0.01) +
-  geom_sf(data = DRC2_cases[DRC2_cases_simp$cases_to_date > 0,], aes(fill=cases_to_date), color='grey', size=0.01)+
+  geom_sf(data = DRC2_cases[DRC2_cases_simp$cases_to_date == 0,], fill='white', color='grey', alpha=0.5, size=0.1) +
+  geom_sf(data = DRC2_cases[DRC2_cases_simp$cases_to_date > 0,], aes(fill=cases_to_date), color='grey', size=0.1)+
   xlim(c(27.5, 31))+
   ylim(c(-2, 3))+
   scale_fill_viridis(name='Total case count') + 
@@ -79,7 +80,7 @@ p_quest = ggplot()+
   geom_sf(data = DRC_boundary_simp, aes(fill=shapeName), size=0, alpha=0.8) +
   scale_fill_brewer(name='Country', palette="Greys", guide='none')+
   new_scale("fill") +
-  geom_sf(data = DRC2_cases_simp[!(DRC2_cases_simp$ADM2_NAME %in% HZs),], fill='white', color='light gray', size=0.01)+ 
+  geom_sf(data = DRC2_cases_simp[!(DRC2_cases_simp$ADM2_NAME %in% HZs),], fill='white', color='light gray', size=0.1)+ 
   geom_sf(data = DRC2_cases_simp[DRC2_cases_simp$ADM2_NAME %in% HZs,], aes(fill=ADM2_NAME, color=ADM2_NAME))+
   xlim(c(27.5, 31))+
   ylim(c(-2, 3))+
@@ -221,9 +222,6 @@ fig_1 = (all_case_plot) / (case_ts/(p_cases + case_maps + plot_layout(widths = c
 fig_1a = (all_case_plot + p_cases + plot_layout(widths =c(6,2))) / case_maps + plot_layout(heights = c(3,3))
 
 
-ggsave('plots/fig1.pdf', fig_1a, width = 12, height=10)
+ggsave(fig_1a, 'plots/fig1.pdf', fig_1a, width = 12, height=10)
 
 
-
-
-dim(timeseries_mat)

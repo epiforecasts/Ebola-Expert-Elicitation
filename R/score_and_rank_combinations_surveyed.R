@@ -1,10 +1,12 @@
 library(data.table)
-library(lubridate)
+library(tidyverse)
 library(ggplot2)
 library(DescTools)
 library(viridis)
 library(ggbump)
+library(patchwork)
 library(cowplot)
+library(ggnewscale)
 
 results_data = fread('outputs/indevidual_results_with_scores_adj.csv')
 
@@ -60,7 +62,7 @@ slim_results = results_data[, c('HZ', 'p_cm', 'type', 'p_cm_val', 'reported_case
 slim_results[, risk_value := p_cm_val]
 
 # combine plain and ensemble results
-all_results = rbind(ensembles, slim_results[, -'p_cm_val'] )
+all_results = rbind(ensembles, slim_results[, -'p_cm_val'] )[month!='November_2019']
 # change model at nominal forecast date 'expert' to 'model'
 all_results[expert==100, expert:='gravity']
 all_results[expert==200, expert:='adjacency']
@@ -115,14 +117,23 @@ sbmo_plot =
   geom_violin(data = scores_by_mnth[type=='expert'], aes(x=1, y=score_bri_mnth), color='white', alpha=0.8, fill='turquoise')+ 
   geom_point(data=scores_by_mnth[type=='expert'], aes(x = 1, y=score_bri_mnth, color=expert), alpha=0.5, position = position_dodge(width = 0.5), size=3) + 
   geom_point(data=scores_by_mnth[type=='ensemble'],aes(x = 3, y=score_bri_mnth, shape=expert), position = position_dodge(width = 0.5), color='orange', size=3) + 
-  geom_point(data=scores_by_mnth[type=='model_nfd'],aes(x = 2, y=score_bri_mnth, shape=expert), position = position_dodge(width = 0.33), color='red', size=3) + 
+  scale_shape_manual(name='Ensemble', values=c(16, 15, 17), labels=c('Experts', 'Models', 'Both'))+
+  
+  new_scale('shape') +
+  
+  geom_point(data=scores_by_mnth[type=='model_nfd'],aes(x = 2, y=score_bri_mnth, shape=expert), position = position_dodge(width = 0.33), color='darkgrey', size=3) + 
+  scale_shape_manual(name='Model', values=c(0, 5), labels=c('Gravity', 'Adjacency'))+
+  
   facet_grid(month~p_cm,labeller=labeller( month = month.labs)) + 
-  scale_x_discrete(limits=c(1,2,3), labels=c('experts', 'model', 'ensembles'), name = 'Forecast type')+
-  scale_shape_discrete(limits=tail(levels(scores_overall$expert),5), labels = c('Model: gravity', 'Model: adjacency', 'Ensemble: experts', 'Ensemble: models', 'Ensemble: both'), name='') +
+  scale_x_discrete(limits=c(1,2,3), labels=c('Experts', 'Models', 'Ensembles'), name = '')+
+  guides(color=guide_legend(ncol=2, title='Experts'))+
   ylab('Brier Score')+ 
   theme_minimal()+
   theme(axis.text.x = element_text(angle=90))+
-  ggtitle('Monthly Performance')
+  ggtitle('B')+
+  theme(
+    legend.justification = "top"
+  )
 
 ggsave('plots/score_by_mo.pdf', sbmo_plot, width=10, height=10)
 ggsave('plots/score_by_mo.png', sbmo_plot, width=10, height=10, units='in')
@@ -141,6 +152,29 @@ sbov_plot =
   theme(axis.text.x = element_text(angle=90), 
         legend.position = 'none')+
   ggtitle('Overall Performance')
+
+sbov_plot = 
+  ggplot() + 
+  geom_violin(data = scores_overall[type=='expert'], aes(x=expert, y=score_bri_overall), color='white', alpha=0.8, fill='turquoise')+ 
+  geom_point(data=scores_overall[type=='expert'], aes(x = expert, y=score_bri_overall, color=expert), alpha=0.5, position = position_dodge(width = 0.5), size=3) + 
+  geom_point(data=scores_overall[type=='ensemble'], aes(x = expert, y=score_bri_overall, shape=expert), position = position_dodge(width = 0.5), color='orange', size=3) + 
+  
+  scale_shape_manual(name='Ensemble', values=c(16, 15, 17), labels=c('Experts', 'Models', 'Both'))+
+  
+  new_scale('shape') +
+  
+  geom_point(data=scores_overall[type=='model_nfd'], aes(x = expert, y=score_bri_overall, shape=expert), position = position_dodge(width = 0.33), color='darkgray', size=3) + 
+  scale_shape_manual(name='Model', values=c(0, 5), labels=c('Gravity', 'Adjacency'))+
+  
+  facet_wrap(~p_cm,labeller=labeller( month = month.labs), ncol=1) +
+  scale_x_discrete(limits=levels(scores_overall$expert), labels=c())+
+  #scale_shape_discrete(limits=tail(levels(scores_overall$expert),5))+
+  ylab('Brier Score')+ 
+  xlab('')+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle=90), 
+        legend.position = 'none')+
+  ggtitle('A')
 
 overall_score_plot = sbov_plot + sbmo_plot +  plot_layout(widths = c(1, 3))
 
@@ -224,12 +258,12 @@ rank_plot =
   facet_grid(month ~ p_cm, scales = 'free_y', space='free', shrink = FALSE, labeller=labeller( month = month.labs))+
   scale_x_continuous(breaks=c(1,2,3,4), labels = c('experts', 'models', 'gravity', 'adjacency')) +
   coord_cartesian(clip = "off")
-
+rank_plot
 ggsave('plots/rankplot.pdf', width=8, height=8)
 ggsave('plots/rankplot.png', width=8, height=8, units = 'in')
 
 
-exp_results = scores_by_mnth[type =='expert']
+exp_results = scores_by_mnth[type %in% c('expert', 'model_nfd')]
 exp_results[, exp_num := as.numeric(expert)]
 
 exp_results[month=='November_2019', month_num := 1]
@@ -239,13 +273,13 @@ exp_results[month=='February_2020', month_num := 4]
 exp_results[month=='March_2020', month_num := 5]
 
 
-exp_results[,ranke := frankv(score_bri_mnth, order=-1, ties.method = 'first'), by=list(p_cm, month)]
+exp_results[,ranke := frankv(score_bri_mnth, order=1, ties.method = 'first'), by=list(p_cm, month)]
 
 
 exp_score_plot = 
-  ggplot(exp_results[ month_num>1], aes(x=month_num, y=score_bri_mnth, color=expert)) +
-  geom_point(size = 3) +
-  geom_bump(size = 1, smooth = 8)  +
+  ggplot() +
+  geom_point(data=exp_results[ month_num>1 & type=='expert'], aes(x=month_num, y=score_bri_mnth, color=expert), size = 3) +
+  geom_bump(data=exp_results[ month_num>1 & type=='expert'], aes(x=month_num, y=score_bri_mnth, color=expert), size = 1, smooth = 8)  +
   scale_color_discrete(name='Expert')+
   #geom_text(data = df_short %>% filter(e == min(e)),
   #          aes(x = e - .1, label = HZ), size = 5, hjust = 1) +
@@ -259,31 +293,72 @@ exp_score_plot =
         legend.text = element_text()) +
   labs(y = "Rank",
        x = NULL) +
-  facet_wrap(~p_cm, shrink = FALSE, ncol=4)+
+  facet_wrap(~p_cm, shrink = FALSE, ncol=2)+
   scale_x_continuous(breaks=c(2,3, 4, 5), labels = c('Dec', 'Jan', 'Feb', 'Mar')) +
   coord_cartesian(clip = "off")
 
 exp_rank_plot = 
-  ggplot(exp_results[ month_num>1], aes(x=month_num, y=ranke, color=expert)) +
-  geom_point(size = 3) +
-  geom_bump(size = 1, smooth = 8)  +
+  ggplot() +
+  geom_point(data=exp_results[ month_num>1 & type=='expert'], aes(x=month_num, y=ranke, color=expert), size = 3, alpha=0.8) +
+  geom_bump(data=exp_results[ month_num>1 & type=='expert'], aes(x=month_num, y=ranke, color=expert), size = 0.3, smooth = 8, alpha=0.8) +
   scale_color_discrete(name='Expert')+
+  guides(color=guide_legend(ncol=4,byrow=TRUE))+
+  
+  new_scale_color()+
+  
+  geom_point(data=exp_results[ month_num>1 & type=='model_nfd' ], aes(x=month_num, y=ranke, color=expert, shape=expert), size = 3) +
+  geom_bump(data=exp_results[ month_num>1 & type=='model_nfd' ], aes(x=month_num, y=ranke, color=expert), size = 0.3, smooth = 8) +  
+  scale_color_manual(name='Model', values=c('darkgray', 'darkgray'), labels=c('Gravity', 'Adjacency'))+
+  
+  scale_shape_manual(name='Model', labels=c('Gravity', 'Adjacency'), values = c(0, 5))+ 
   #geom_text(data = df_short %>% filter(e == min(e)),
   #          aes(x = e - .1, label = HZ), size = 5, hjust = 1) +
   #geom_text(data = df_short %>% filter(e == max(e)),
   #          aes(x = e + .1, label = HZ), size = 5, hjust = 0) +
-  theme_minimal_grid(font_size = 14, line_size = 0) +
-  theme(panel.spacing = unit(2, "lines"),
-        panel.grid.major = element_blank(), 
-        axis.text.x = element_text(angle=90, size=10), 
-        axis.text.y = element_text(size=10), 
-        legend.text = element_text()) +
+  theme_minimal()  +
   scale_y_reverse(breaks = scales::breaks_width(-1, offset=-1))+ 
   labs(y = "Rank",
        x = NULL) +
-  facet_wrap(~p_cm, shrink = FALSE, ncol=1)+
+  facet_wrap(~p_cm, shrink = FALSE, ncol=4)+
   scale_x_continuous(breaks=c(2,3, 4, 5), labels = c('Dec', 'Jan', 'Feb', 'Mar')) +
-  coord_cartesian(clip = "off")
+  coord_cartesian(clip = "off")+
+  ggtitle('C')+
+  
+  theme(panel.spacing = unit(2, "lines"),
+        panel.grid.major = element_blank(), 
+        axis.text.x = element_text(angle=90), 
+        axis.text.y = element_text(), 
+        legend.text = element_text(), 
+        text = element_text(size=11),
+        legend.position = 'none')
 
 
-ggsave('plots/rankplot.pdf', width=8, height=8)
+ggsave('plots/rankplot_experts.pdf', exp_rank_plot, width=12, height=3)
+ggsave('plots/rankplot_experts.png', exp_rank_plot, width=20, height=7, units='cm')
+
+layout = "
+AABBBB
+AABBBB
+AABBBB
+AABBBB
+CCCCCC"
+
+overall_score_plot = sbov_plot + sbmo_plot + exp_rank_plot +  plot_layout(design = layout)
+
+
+ggsave('plots/overall_plot_with_rank.png', overall_score_plot, width=23, height=24, units='cm')
+
+
+
+
+library(ggbeeswarm)
+results_data[expert<100 & type=='expert',] %>% ggplot() + 
+  #geom_histogram(aes(x=score_bri, group=month, fill=month), alpha=0.5)+
+  geom_beeswarm(aes(y=month, x=score_bri, group=expert, color=as.character(expert)), side = 1)+
+  facet_wrap(~month)+
+  theme_minimal()
+
+
+
+results_data[expert==1 & type=='expert' & HZ=='BENI',]
+ 

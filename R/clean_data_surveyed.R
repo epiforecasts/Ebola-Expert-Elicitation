@@ -180,7 +180,7 @@ for (month in months){
   ebola_risks_long[, type := 'model_nfd']
   
   ebola_risks_adj_long[, expert := 200]
-  ebola_risks_adj_long[, expert_date := expert_date]
+  ebola_risks_adj_long[, expert_date := nominal_forecast_date]
   ebola_risks_adj_long[, horizon_start_date := e_data$horizon_start_date[1]]
   ebola_risks_adj_long[, horizon_end_date := e_data$horizon_end_date[1]]
   ebola_risks_adj_long[, delay := e_data$delay[1]]
