@@ -4,7 +4,7 @@
 This repo contains the analysis code for the paper "Predicting ongoing transmission and flare-ups in a declining Ebola epidemic: Understanding the relative performance of experts and mathematical models". The breakdown of the codebase is as follows: 
 
 ## Additional repositories
-The preperation of data from the expert forecasts is found in a seperate repository: https://github.com/rmjlros/Expert-elicitation
+The preperation of data from the expert forecasts is found in a seperate repository: https://github.com/epiforecasts/Expert-elicitation
 
 Computational forecasts were made using the EpiCastR package: https://github.com/epiforecasts/EpiCastR
 
