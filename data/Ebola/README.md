@@ -12,7 +12,6 @@ Third-party humanitarian data, redistributed here under its original licence.
   <http://creativecommons.org/licenses/by/3.0/igo/legalcode> (redistribution and
   adaptation permitted with attribution).
 
-`drc_ebola_cases_hdx_2020-07-11.csv` is the full time series (unmodified),
-snapshotted from the epiforecasts Google Sheet mirror of the HDX dataset.
+`drc_ebola_cases_hdx_2020-07-11.csv` is the full time series (unmodified).
 `Cases+Deaths_By_Health_Zone_MOH_HDX_2019-05-21.csv` and the files under
 `old data/` are earlier extracts of the same dataset.

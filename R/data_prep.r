@@ -22,10 +22,9 @@ fix_nan1 <- function(x) {
 }
 
 # Case data snapshot ---------------------------------------------------------
-# MoH/HDX DRC Ebola situation-report data, exported from the epiforecasts
-# published Google Sheet. The sheet was last updated 2020-07-11 (end of the
-# North Kivu outbreak); it is frozen here so the analysis reproduces without a
-# live network read (the original code read this from a Google Sheets URL).
+# MoH/HDX DRC Ebola situation-report data for the North Kivu outbreak, frozen
+# here (to 2020-07-11) so the analysis reproduces without a live network read.
+# See data/Ebola/README.md for provenance and licence.
 case_data_file <- "data/Ebola/drc_ebola_cases_hdx_2020-07-11.csv"
 
 read_case_data <- function(path = case_data_file) {
