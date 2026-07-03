@@ -21,9 +21,10 @@ library(tidyverse)
 
 ### get data
 
-# cases, from James
-headers =  read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSrr9DRaC2fXzPdmOxLW-egSYtxmEp_RKoYGggt-zOKYXSx4RjPsM4EO19H7OJVX1esTtIoFvlKFWcn/pub?gid=1564028913&single=true&output=csv", header = F, nrows = 1, as.is = TRUE)
-evd_cases = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSrr9DRaC2fXzPdmOxLW-egSYtxmEp_RKoYGggt-zOKYXSx4RjPsM4EO19H7OJVX1esTtIoFvlKFWcn/pub?gid=1564028913&single=true&output=csv", skip = 2, header = F)
+# cases, from James (frozen HDX/MoH snapshot; originally read live from a Google Sheet)
+case_data_file = "data/Ebola/drc_ebola_cases_hdx_2020-07-11.csv"
+headers =  read.csv(case_data_file, header = F, nrows = 1, as.is = TRUE)
+evd_cases = read.csv(case_data_file, skip = 2, header = F)
 # evd_cases = read.csv("/Users/eoccaros/Documents/VEEPED/Ebola/Data/HDX/Data_ DRC Ebola Outbreak, North Kivu and Ituri - MOH-By-Health-Zone.csv", skip = 2, header = F)
 colnames(evd_cases)= headers
 
