@@ -1,7 +1,4 @@
-# wd
-getwd()
-wdir<-"~/Documents/GitHub/Ebola-DRC-maps/"
-setwd(wdir)
+# run from the repository root
 
 # packages
 require(dplyr)
@@ -21,11 +18,10 @@ library(tidyverse)
 
 ### get data
 
-case_data_file = "data/Ebola/drc_ebola_cases_hdx_2020-07-11.csv"
-headers =  read.csv(case_data_file, header = F, nrows = 1, as.is = TRUE)
-evd_cases = read.csv(case_data_file, skip = 2, header = F)
-# evd_cases = read.csv("/Users/eoccaros/Documents/VEEPED/Ebola/Data/HDX/Data_ DRC Ebola Outbreak, North Kivu and Ituri - MOH-By-Health-Zone.csv", skip = 2, header = F)
-colnames(evd_cases)= headers
+source("R/data_prep.r")
+
+# keep the original health_zone column name for the cleaning steps below
+evd_cases = read_case_data(rename_hz = FALSE)
 
 ### clean evd_cases
 # correct classes

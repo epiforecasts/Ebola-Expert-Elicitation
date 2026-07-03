@@ -27,11 +27,13 @@ fix_nan1 <- function(x) {
 # See data/Ebola/README.md for provenance and licence.
 case_data_file <- "data/Ebola/drc_ebola_cases_hdx_2020-07-11.csv"
 
-read_case_data <- function(path = case_data_file) {
+read_case_data <- function(path = case_data_file, rename_hz = TRUE) {
   headers <- read.csv(path, header = FALSE, nrows = 1, as.is = TRUE)
   DRCDATA <- read.csv(path, skip = 2, header = FALSE)
   colnames(DRCDATA) <- headers
-  colnames(DRCDATA)[colnames(DRCDATA) == "health_zone"] <- "ADM2_NAME"
+  if (rename_hz) {
+    colnames(DRCDATA)[colnames(DRCDATA) == "health_zone"] <- "ADM2_NAME"
+  }
   DRCDATA
 }
 
