@@ -12,9 +12,6 @@ Third-party humanitarian data, redistributed here under its original licence.
   <http://creativecommons.org/licenses/by/3.0/igo/legalcode> (redistribution and
   adaptation permitted with attribution).
 
-Figures were provisional while the outbreak was ongoing (including a one-week
-series break in late July 2019); see the HDX page for detail.
-
 `drc_ebola_cases_hdx_2020-07-11.csv` is the full time series (unmodified),
 snapshotted from the epiforecasts Google Sheet mirror of the HDX dataset.
 `Cases+Deaths_By_Health_Zone_MOH_HDX_2019-05-21.csv` and the files under
