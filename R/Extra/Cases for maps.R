@@ -21,7 +21,6 @@ library(tidyverse)
 
 ### get data
 
-# cases, from James (frozen HDX/MoH snapshot; originally read live from a Google Sheet)
 case_data_file = "data/Ebola/drc_ebola_cases_hdx_2020-07-11.csv"
 headers =  read.csv(case_data_file, header = F, nrows = 1, as.is = TRUE)
 evd_cases = read.csv(case_data_file, skip = 2, header = F)
