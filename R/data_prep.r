@@ -21,6 +21,22 @@ fix_nan1 <- function(x) {
 
 }
 
+# Case data snapshot ---------------------------------------------------------
+# MoH/HDX DRC Ebola situation-report data for the North Kivu outbreak, frozen
+# here (to 2020-07-11) so the analysis reproduces without a live network read.
+# See data/Ebola/README.md for provenance and licence.
+case_data_file <- "data/Ebola/drc_ebola_cases_hdx_2020-07-11.csv"
+
+read_case_data <- function(path = case_data_file, rename_hz = TRUE) {
+  headers <- read.csv(path, header = FALSE, nrows = 1, as.is = TRUE)
+  DRCDATA <- read.csv(path, skip = 2, header = FALSE)
+  colnames(DRCDATA) <- headers
+  if (rename_hz) {
+    colnames(DRCDATA)[colnames(DRCDATA) == "health_zone"] <- "ADM2_NAME"
+  }
+  DRCDATA
+}
+
 extract_totcase_data <- function(subarea = FALSE, case_type='confirmed_cases')
 
   {
@@ -44,10 +60,7 @@ extract_totcase_data <- function(subarea = FALSE, case_type='confirmed_cases')
 
   }
 
-  headers =  read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSrr9DRaC2fXzPdmOxLW-egSYtxmEp_RKoYGggt-zOKYXSx4RjPsM4EO19H7OJVX1esTtIoFvlKFWcn/pub?gid=1564028913&single=true&output=csv", header = F, nrows = 1, as.is = TRUE)
-  DRCDATA = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSrr9DRaC2fXzPdmOxLW-egSYtxmEp_RKoYGggt-zOKYXSx4RjPsM4EO19H7OJVX1esTtIoFvlKFWcn/pub?gid=1564028913&single=true&output=csv", skip = 2, header = F)
-  colnames(DRCDATA)= headers
-  colnames(DRCDATA)[colnames(DRCDATA)=="health_zone"] <- "ADM2_NAME"
+  DRCDATA = read_case_data()
 
   DRCDATA[is.na(DRCDATA)] <- 0                                                                          # set NAN values to 0
 
@@ -70,10 +83,7 @@ extract_totcase_data <- function(subarea = FALSE, case_type='confirmed_cases')
 construct_time_series_mat <- function(DRC2_drc = extract_totcase_data())
 
   {
-  headers =  read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSrr9DRaC2fXzPdmOxLW-egSYtxmEp_RKoYGggt-zOKYXSx4RjPsM4EO19H7OJVX1esTtIoFvlKFWcn/pub?gid=1564028913&single=true&output=csv", header = F, nrows = 1, as.is = TRUE)
-  DRCDATA = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSrr9DRaC2fXzPdmOxLW-egSYtxmEp_RKoYGggt-zOKYXSx4RjPsM4EO19H7OJVX1esTtIoFvlKFWcn/pub?gid=1564028913&single=true&output=csv", skip = 2, header = F)
-  colnames(DRCDATA)= headers
-  colnames(DRCDATA)[colnames(DRCDATA)=="health_zone"] <- "ADM2_NAME"
+  DRCDATA = read_case_data()
 
   DRCDATA[is.na(DRCDATA)] <- 0
   DRCDATA$ADM2_NAME = as.character(DRCDATA$ADM2_NAME)
@@ -168,10 +178,7 @@ construct_time_series_mat <- function(DRC2_drc = extract_totcase_data())
 construct_time_series_mat_old <- function(DRC2_drc = extract_totcase_data())
   
 {
-  headers =  read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSrr9DRaC2fXzPdmOxLW-egSYtxmEp_RKoYGggt-zOKYXSx4RjPsM4EO19H7OJVX1esTtIoFvlKFWcn/pub?gid=1564028913&single=true&output=csv", header = F, nrows = 1, as.is = TRUE)
-  DRCDATA = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSrr9DRaC2fXzPdmOxLW-egSYtxmEp_RKoYGggt-zOKYXSx4RjPsM4EO19H7OJVX1esTtIoFvlKFWcn/pub?gid=1564028913&single=true&output=csv", skip = 2, header = F)
-  colnames(DRCDATA)= headers
-  colnames(DRCDATA)[colnames(DRCDATA)=="health_zone"] <- "ADM2_NAME"
+  DRCDATA = read_case_data()
   
   DRCDATA[is.na(DRCDATA)] <- 0
   DRCDATA$ADM2_NAME = as.character(DRCDATA$ADM2_NAME)

@@ -37,6 +37,10 @@ respectively.
 
 The calculation of hazard rate gap is executed in `calculate_hazard_rates_surveyed.R`
 
+## Data sources
+
+The Ebola case data are third-party humanitarian data from the DRC Ministry of Health and WHO, distributed via the [Humanitarian Data Exchange](https://data.humdata.org/dataset/ebola-cases-and-deaths-drc-north-kivu) under the CC BY-IGO 3.0 licence. See [`data/Ebola/README.md`](data/Ebola/README.md) for full provenance and attribution. The repository `LICENSE` (MIT) covers the analysis code only, not the third-party data.
+
 
 
 
