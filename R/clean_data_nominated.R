@@ -15,7 +15,7 @@ log_score = function(risk_values,wherecaseswere){
 
 source("R/data_prep.r")
 
-experts_path = '../Expert-elicitation'
+experts_path = 'Ebola-Expert-Interviews'
 
 # Get the case data for whole outbreak 
 DRC2_cases = extract_totcase_data(subarea=c("Nord-Kivu", "Ituri", "Tshopo", "Maniema", "Sud-Kivu", "Haut-Uele", "Bas-Uele"))

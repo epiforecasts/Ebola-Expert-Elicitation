@@ -25,7 +25,7 @@ scores_adj = data.frame()
 
 month = 'March_2020'
 
-expert_results = fread(paste0('../Expert-elicitation/Outputs/results_', month,'.csv'))
+expert_results = fread(paste0('Ebola-Expert-Interviews/Outputs/results_', month,'.csv'))
 
 expert_results[, date := lubridate::dmy(date)]
 
@@ -91,7 +91,7 @@ log_score = function(risk_values,wherecaseswere){
 
 
 
-experts_december = read.csv(paste0('../../Analyses/Expert-elicitation/Outputs/results_', month, '_cm.csv'))
+experts_december = read.csv(paste0('Ebola-Expert-Interviews/Outputs/results_', month, '_cm.csv'))
 experts_december %>% filter(p_cm == ">=2", HZ == 'BENI')
 
 experts_december['date'] = lubridate::dmy(experts_december['expert.date'])

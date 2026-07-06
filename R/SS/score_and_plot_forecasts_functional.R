@@ -4,7 +4,7 @@ require(DescTools)
 
 source("R/data_prep.r")
 
-experts_path = '../Expert-elicitation'
+experts_path = 'Ebola-Expert-Interviews'
 
 
 DRC2_cases = extract_totcase_data(subarea=c("Nord-Kivu", "Ituri", "Tshopo", "Maniema", "Sud-Kivu", "Haut-Uele", "Bas-Uele"))
