@@ -21,7 +21,7 @@ scores_adj = data.frame()
 
 month = 'November_2019'
 
-expert_results = fread(paste0('../Expert-elicitation/Outputs/results_', month,'.csv'))
+expert_results = fread(paste0('Ebola-Expert-Interviews/Outputs/results_', month,'.csv'))
 
 expert_results[, date := lubridate::dmy(date)]
 

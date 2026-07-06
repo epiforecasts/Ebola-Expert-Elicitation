@@ -1,0 +1,3 @@
+[submodule "Ebola-Expert-Interviews"]
+	path = Ebola-Expert-Interviews
+	url = https://github.com/epiforecasts/Ebola-Expert-Interviews.git
